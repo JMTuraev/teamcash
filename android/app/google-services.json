@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "136324996533",
+    "project_id": "teamcash-83a6e",
+    "storage_bucket": "teamcash-83a6e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:136324996533:android:e531b37ec9ae615a984dfc",
+        "android_client_info": {
+          "package_name": "uz.teamcash"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDcGPUDUQyXIbgjwU3ZtGYBT7XR4iAOLEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
