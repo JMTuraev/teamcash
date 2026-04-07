@@ -1,0 +1,409 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function operatorAccountPath() {
+      return /databases/$(database)/documents/operatorAccounts/$(request.auth.uid);
+    }
+
+    function customerLinkPath() {
+      return /databases/$(database)/documents/customerAuthLinks/$(request.auth.uid);
+    }
+
+    function hasOperatorAccount() {
+      return isSignedIn() && exists(operatorAccountPath());
+    }
+
+    function operatorAccount() {
+      return get(operatorAccountPath()).data;
+    }
+
+    function hasCustomerLink() {
+      return isSignedIn() && exists(customerLinkPath());
+    }
+
+    function customerLink() {
+      return get(customerLinkPath()).data;
+    }
+
+    function isOwner() {
+      return hasOperatorAccount()
+        && operatorAccount().role == 'owner'
+        && operatorAccount().disabledAt == null;
+    }
+
+    function isStaff() {
+      return hasOperatorAccount()
+        && operatorAccount().role == 'staff'
+        && operatorAccount().disabledAt == null;
+    }
+
+    function isClient() {
+      return hasCustomerLink();
+    }
+
+    function currentCustomerId() {
+      return customerLink().customerId;
+    }
+
+    function managesBusiness(businessId) {
+      return isOwner() && operatorAccount().businessIds.hasAny([businessId]);
+    }
+
+    function assignedBusiness(businessId) {
+      return isStaff() && operatorAccount().businessId == businessId;
+    }
+
+    function canAccessBusiness(businessId) {
+      return managesBusiness(businessId) || assignedBusiness(businessId);
+    }
+
+    function safeBusinessKeys() {
+      return [
+        'address',
+        'cashbackBasisPoints',
+        'category',
+        'coverImageUrl',
+        'coverImageStoragePath',
+        'description',
+        'locationsCount',
+        'logoUrl',
+        'logoStoragePath',
+        'name',
+        'phoneNumbers',
+        'productsCount',
+        'redeemPolicy',
+        'updatedAt',
+        'workingHours'
+      ];
+    }
+
+    function safeCustomerProfileKeys() {
+      return [
+        'avatarUrl',
+        'displayName',
+        'marketingOptIn',
+        'preferredClientTab',
+        'updatedAt'
+      ];
+    }
+
+    function safeOperatorSelfKeys() {
+      return [
+        'displayName',
+        'notificationDigestOptIn',
+        'passwordChangedAt',
+        'preferredStartTab',
+        'updatedAt'
+      ];
+    }
+
+    function safeNotificationKeys() {
+      return [
+        'isRead',
+        'readAt',
+        'updatedAt'
+      ];
+    }
+
+    function isShortString(value, maxLength) {
+      return value is string && value.size() > 0 && value.size() <= maxLength;
+    }
+
+    function isOptionalShortString(value, maxLength) {
+      return value == null || (value is string && value.size() <= maxLength);
+    }
+
+    function isSafePhoneList(value) {
+      return value is list && value.size() > 0 && value.size() <= 4;
+    }
+
+    function validBusinessProfileShape(businessId) {
+      return request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.keys().hasOnly(resource.data.keys())
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 80
+        && request.resource.data.category is string
+        && request.resource.data.category.size() > 0
+        && request.resource.data.category.size() <= 40
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 400
+        && request.resource.data.address is string
+        && request.resource.data.address.size() <= 180
+        && request.resource.data.workingHours is string
+        && request.resource.data.workingHours.size() <= 80
+        && isSafePhoneList(request.resource.data.phoneNumbers)
+        && request.resource.data.cashbackBasisPoints is int
+        && request.resource.data.cashbackBasisPoints >= 0
+        && request.resource.data.cashbackBasisPoints <= 10000
+        && request.resource.data.redeemPolicy is string
+        && request.resource.data.redeemPolicy.size() <= 200
+        && isOptionalShortString(request.resource.data.logoUrl, 500)
+        && isOptionalShortString(request.resource.data.logoStoragePath, 500)
+        && isOptionalShortString(request.resource.data.coverImageUrl, 500)
+        && isOptionalShortString(request.resource.data.coverImageStoragePath, 500)
+        && request.resource.data.updatedAt != null;
+    }
+
+    function validLocationShape(businessId) {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'businessId',
+          'name',
+          'address',
+          'workingHours',
+          'phoneNumbers',
+          'notes',
+          'isPrimary',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.businessId == businessId
+        && isShortString(request.resource.data.id, 120)
+        && isShortString(request.resource.data.name, 80)
+        && isShortString(request.resource.data.address, 180)
+        && isOptionalShortString(request.resource.data.workingHours, 80)
+        && isSafePhoneList(request.resource.data.phoneNumbers)
+        && isOptionalShortString(request.resource.data.notes, 240)
+        && request.resource.data.isPrimary is bool;
+    }
+
+    function validCatalogShape(businessId) {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'businessId',
+          'name',
+          'description',
+          'priceLabel',
+          'isActive',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.businessId == businessId
+        && isShortString(request.resource.data.id, 120)
+        && isShortString(request.resource.data.name, 80)
+        && isOptionalShortString(request.resource.data.description, 240)
+        && isOptionalShortString(request.resource.data.priceLabel, 60)
+        && request.resource.data.isActive is bool;
+    }
+
+    function validMediaShape(businessId) {
+      return request.resource.data.keys().hasOnly([
+          'id',
+          'businessId',
+          'title',
+          'caption',
+          'mediaType',
+          'imageUrl',
+          'storagePath',
+          'isFeatured',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.businessId == businessId
+        && isShortString(request.resource.data.id, 120)
+        && isShortString(request.resource.data.title, 80)
+        && isOptionalShortString(request.resource.data.caption, 240)
+        && isShortString(request.resource.data.mediaType, 40)
+        && isOptionalShortString(request.resource.data.imageUrl, 500)
+        && isOptionalShortString(request.resource.data.storagePath, 500)
+        && request.resource.data.isFeatured is bool;
+    }
+
+    match /operatorAccounts/{uid} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == uid ||
+        (
+          isOwner() &&
+          resource.data.role == 'staff' &&
+          (
+            resource.data.ownerId == request.auth.uid ||
+            operatorAccount().businessIds.hasAny([resource.data.businessId])
+          )
+        )
+      );
+      allow create: if false;
+      allow update: if isSignedIn()
+        && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(safeOperatorSelfKeys());
+      allow delete: if false;
+    }
+
+    match /operatorUsernames/{username} {
+      allow read, create: if false;
+      allow update, delete: if false;
+    }
+
+    match /customerPhoneIndex/{phoneE164} {
+      allow read, create: if false;
+      allow update, delete: if false;
+    }
+
+    match /customerAuthLinks/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /customers/{customerId} {
+      allow read: if isClient() && currentCustomerId() == customerId;
+      allow create: if false;
+      allow update: if isClient()
+        && currentCustomerId() == customerId
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(safeCustomerProfileKeys())
+        && isOptionalShortString(request.resource.data.avatarUrl, 500)
+        && isOptionalShortString(request.resource.data.displayName, 80)
+        && (request.resource.data.marketingOptIn == null || request.resource.data.marketingOptIn is bool)
+        && isOptionalShortString(request.resource.data.preferredClientTab, 24);
+      allow delete: if false;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.recipientUid == request.auth.uid;
+      allow create, delete: if false;
+      allow update: if isSignedIn()
+        && resource.data.recipientUid == request.auth.uid
+        && request.resource.data.recipientUid == resource.data.recipientUid
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(safeNotificationKeys());
+    }
+
+    match /businesses/{businessId} {
+      allow read: if isSignedIn();
+      allow create: if false;
+      allow update: if managesBusiness(businessId)
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(safeBusinessKeys())
+        && validBusinessProfileShape(businessId);
+      allow delete: if false;
+
+      match /locations/{locationId} {
+        allow read: if isSignedIn();
+        allow create, update: if managesBusiness(businessId) && validLocationShape(businessId);
+        allow delete: if managesBusiness(businessId);
+      }
+
+      match /products/{productId} {
+        allow read: if isSignedIn();
+        allow create, update: if managesBusiness(businessId) && validCatalogShape(businessId);
+        allow delete: if managesBusiness(businessId);
+      }
+
+      match /services/{serviceId} {
+        allow read: if isSignedIn();
+        allow create, update: if managesBusiness(businessId) && validCatalogShape(businessId);
+        allow delete: if managesBusiness(businessId);
+      }
+
+      match /media/{mediaId} {
+        allow read: if isSignedIn();
+        allow create, update: if managesBusiness(businessId) && validMediaShape(businessId);
+        allow delete: if managesBusiness(businessId);
+      }
+
+      match /statsDaily/{dateId} {
+        allow read: if canAccessBusiness(businessId);
+        allow create: if false;
+        allow update, delete: if false;
+      }
+    }
+
+    match /groups/{groupId} {
+      allow read: if isSignedIn();
+      allow create: if false;
+      allow update, delete: if false;
+
+      match /members/{businessId} {
+        allow read: if isSignedIn();
+        allow create: if false;
+        allow update, delete: if false;
+      }
+
+      match /joinRequests/{requestId} {
+        allow read: if isSignedIn();
+        allow create: if false;
+        allow update, delete: if false;
+
+        match /votes/{businessId} {
+          allow read: if isSignedIn();
+          allow write: if false;
+        }
+      }
+
+      match /history/{entryId} {
+        allow read: if isSignedIn();
+        allow create: if false;
+        allow update, delete: if false;
+      }
+    }
+
+    match /walletLots/{lotId} {
+      allow read: if isClient() && resource.data.ownerCustomerId == currentCustomerId();
+      allow create: if false;
+      allow update, delete: if false;
+    }
+
+    match /ledgerEvents/{eventId} {
+      allow read: if (
+          isClient() && resource.data.participantCustomerIds.hasAny([currentCustomerId()])
+        ) || (
+          isOwner() && operatorAccount().businessIds.hasAny(resource.data.participantBusinessIds)
+        ) || (
+          isStaff() && resource.data.participantBusinessIds.hasAny([operatorAccount().businessId])
+        );
+      allow create: if false;
+      allow update, delete: if false;
+    }
+
+    match /giftTransfers/{transferId} {
+      allow read: if (
+          isClient() && (
+            resource.data.sourceCustomerId == currentCustomerId() ||
+            resource.data.recipientCustomerId == currentCustomerId() ||
+            resource.data.recipientPhoneE164 == customerLink().phoneE164
+          )
+        ) || (
+          isOwner() && operatorAccount().businessIds.hasAny(resource.data.participantBusinessIds)
+        ) || (
+          isStaff() && resource.data.participantBusinessIds.hasAny([operatorAccount().businessId])
+        );
+      allow create: if false;
+      allow update, delete: if false;
+    }
+
+    match /sharedCheckouts/{checkoutId} {
+      allow read: if (
+          isClient() && resource.data.participantCustomerIds.hasAny([currentCustomerId()])
+        ) || (
+          isOwner() && operatorAccount().businessIds.hasAny([resource.data.businessId])
+        ) || (
+          isStaff() && operatorAccount().businessId == resource.data.businessId
+        );
+      allow create: if false;
+      allow update, delete: if false;
+
+      match /contributions/{contributionId} {
+        allow read: if (
+            isClient() && get(/databases/$(database)/documents/sharedCheckouts/$(checkoutId)).data.participantCustomerIds.hasAny([currentCustomerId()])
+          ) || (
+            isOwner() && operatorAccount().businessIds.hasAny([get(/databases/$(database)/documents/sharedCheckouts/$(checkoutId)).data.businessId])
+          ) || (
+            isStaff() && operatorAccount().businessId == get(/databases/$(database)/documents/sharedCheckouts/$(checkoutId)).data.businessId
+          );
+        allow create: if false;
+        allow update, delete: if false;
+      }
+    }
+
+    match /businessNotifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.recipientUid == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

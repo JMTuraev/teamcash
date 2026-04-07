@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function businessPath(businessId) {
+      return /databases/(default)/documents/businesses/$(businessId);
+    }
+
+    function ownsBusiness(ownerUid, businessId) {
+      return isSignedIn()
+        && request.auth.uid == ownerUid
+        && firestore.exists(businessPath(businessId))
+        && firestore.get(businessPath(businessId)).data.ownerUid == ownerUid;
+    }
+
+    function isSafeImageAssetWrite() {
+      return request.resource == null || (
+        request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*')
+      );
+    }
+
+    match /owners/{ownerUid}/businesses/{businessId}/{allPaths=**} {
+      allow read: if ownsBusiness(ownerUid, businessId);
+      allow write: if ownsBusiness(ownerUid, businessId) && isSafeImageAssetWrite();
+    }
+
+    match /customers/{authUid}/{allPaths=**} {
+      allow read: if isSignedIn() && request.auth.uid == authUid;
+      allow write: if isSignedIn()
+        && request.auth.uid == authUid
+        && isSafeImageAssetWrite();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

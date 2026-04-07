@@ -1,0 +1,16 @@
+{
+  "name": "teamcash-firebase-seed",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "node seed.mjs",
+    "seed:firestore-admin": "node admin_seed.mjs",
+    "ensure:client-smoke": "node ensure_client_smoke.mjs",
+    "reconcile:live": "node reconcile_live_seed_state.mjs",
+    "seed:business-media": "node seed_business_media.mjs",
+    "onboard:operator": "node onboard_operator.mjs"
+  },
+  "dependencies": {
+    "firebase": "^12.4.0"
+  }
+}

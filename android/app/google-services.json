@@ -12,7 +12,20 @@
           "package_name": "uz.teamcash"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "136324996533-cumjdla8l5r411lm5j7nte2rtjueljqk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uz.teamcash",
+            "certificate_hash": "a15e0c030c250f8d48dbab2d8c723939ffd7fc01"
+          }
+        },
+        {
+          "client_id": "136324996533-dlj56v3mt2mpni3iudiam8e2s2pma3vr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDcGPUDUQyXIbgjwU3ZtGYBT7XR4iAOLEc"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "136324996533-dlj56v3mt2mpni3iudiam8e2s2pma3vr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "136324996533-uhu0rhk575b3rgpdjk7b3sin3km845e2.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.teamcash"
+              }
+            }
+          ]
         }
       }
     }
