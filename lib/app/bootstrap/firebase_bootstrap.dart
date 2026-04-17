@@ -1,5 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:teamcash/firebase_options.dart';
 import 'package:teamcash/core/config/teamcash_environment.dart';
@@ -31,10 +35,11 @@ Future<FirebaseBootstrapResult> initializeFirebase() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    final emulatorMessage = await _connectFirebaseEmulators();
     final appCheckMessage = await _activateAppCheck();
     return const FirebaseBootstrapResult.connected(
       'Firebase is active using the generated FlutterFire platform options.',
-    )._withMessageSuffix(appCheckMessage);
+    )._withMessageSuffix(emulatorMessage)._withMessageSuffix(appCheckMessage);
   } on FirebaseException catch (error, stackTrace) {
     logAppDiagnostic(
       'firebase_bootstrap_failed',
@@ -72,7 +77,52 @@ extension on FirebaseBootstrapResult {
   }
 }
 
+Future<String> _connectFirebaseEmulators() async {
+  if (!TeamCashEnvironment.useFirebaseEmulators) {
+    return '';
+  }
+
+  try {
+    await FirebaseAuth.instance.useAuthEmulator(
+      TeamCashEnvironment.authEmulatorHost,
+      TeamCashEnvironment.authEmulatorPort,
+    );
+    FirebaseFirestore.instance.useFirestoreEmulator(
+      TeamCashEnvironment.firestoreEmulatorHost,
+      TeamCashEnvironment.firestoreEmulatorPort,
+    );
+    FirebaseFunctions.instanceFor(
+      region: TeamCashEnvironment.functionsRegion,
+    ).useFunctionsEmulator(
+      TeamCashEnvironment.functionsEmulatorHost,
+      TeamCashEnvironment.functionsEmulatorPort,
+    );
+    await FirebaseStorage.instance.useStorageEmulator(
+      TeamCashEnvironment.storageEmulatorHost,
+      TeamCashEnvironment.storageEmulatorPort,
+    );
+
+    return 'Firebase emulators are active for auth, firestore, functions, and storage.';
+  } on Object catch (error, stackTrace) {
+    logAppDiagnostic(
+      'firebase_emulator_connection_failed',
+      payload: {
+        'error': error.toString(),
+        'environment': TeamCashEnvironment.describe(),
+      },
+      stackTrace: stackTrace,
+      isError: true,
+    );
+
+    rethrow;
+  }
+}
+
 Future<String> _activateAppCheck() async {
+  if (TeamCashEnvironment.useFirebaseEmulators) {
+    return 'App Check stays disabled while Firebase emulators are active.';
+  }
+
   if (!TeamCashEnvironment.shouldAttemptAppCheck) {
     return 'App Check is disabled for this runtime.';
   }

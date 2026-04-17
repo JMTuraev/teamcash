@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:teamcash/app/app.dart';
 import 'package:teamcash/app/bootstrap/firebase_bootstrap.dart';
 import 'package:teamcash/core/models/app_role.dart';
+import 'package:teamcash/core/models/workspace_models.dart';
 import 'package:teamcash/core/session/session_controller.dart';
 import 'package:teamcash/features/shared/presentation/shell_widgets.dart';
 
@@ -16,128 +17,177 @@ class RoleHubPage extends ConsumerWidget {
     final snapshot = ref.watch(appSnapshotProvider);
     final firebaseStatus = ref.watch(firebaseStatusProvider);
     final session = ref.watch(currentSessionProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFCFAF6), Color(0xFFF4EEE3), Color(0xFFE8F1EE)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      body: AppBackdrop(
+        child: SafeArea(
+          child: MobileAppFrame(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _HeroCopy(
+                  statsLine:
+                      '${snapshot.directory.length} trusted businesses • ${snapshot.client.walletLots.length} wallet lots',
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: _RolePanel(
+                    firebaseStatus: firebaseStatus,
+                    sessionRole: session?.role,
+                    snapshot: snapshot,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                InfoBanner(
+                  title: firebaseStatus.mode ==
+                          FirebaseBootstrapMode.connected
+                      ? 'Connected Firebase runtime'
+                      : 'Preview runtime active',
+                  message: firebaseStatus.message,
+                  color: firebaseStatus.mode ==
+                          FirebaseBootstrapMode.connected
+                      ? const Color(0xFFE8FBF4)
+                      : const Color(0xFFFFF3DF),
+                  icon: firebaseStatus.mode ==
+                          FirebaseBootstrapMode.connected
+                      ? Icons.cloud_done_outlined
+                      : Icons.visibility_outlined,
+                ),
+              ],
+            ),
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1240),
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF153C36),
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Private cashback tandems for trusted business groups',
-                          style: theme.textTheme.displaySmall?.copyWith(
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'This foundation keeps the core product rules intact: group-bound cashback, transferable client lots, unanimous group entry, shadow wallets by phone, and server-authoritative ledger actions.',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: const Color(0xFFD9E2EC),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: const [
-                            _PillarChip(label: 'Shadow wallet claim by phone'),
-                            _PillarChip(
-                              label: 'Client transfer and pending gift',
-                            ),
-                            _PillarChip(label: 'Multi-client shared checkout'),
-                            _PillarChip(label: 'Unanimous tandem approval'),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  InfoBanner(
-                    title:
-                        firebaseStatus.mode == FirebaseBootstrapMode.connected
-                        ? 'Firebase runtime connected'
-                        : 'Preview runtime active',
-                    message: firebaseStatus.message,
-                    color:
-                        firebaseStatus.mode == FirebaseBootstrapMode.connected
-                        ? const Color(0xFFE7F5EF)
-                        : const Color(0xFFFFF2D8),
-                  ),
-                  const SizedBox(height: 20),
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: AppRole.values
-                        .map(
-                          (role) => _RoleCard(
+      ),
+    );
+  }
+}
+
+class _HeroCopy extends StatelessWidget {
+  const _HeroCopy({required this.statsLine});
+
+  final String statsLine;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6576FF), Color(0xFF7F65FF)],
+            ),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          alignment: Alignment.center,
+          child: const Icon(Icons.link_rounded, size: 28, color: Colors.white),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          'TeamCash',
+          style: theme.textTheme.displaySmall?.copyWith(fontSize: 28),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Earn together. Spend smarter.',
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: const Color(0xFF6A7394),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Private cashback tandems for trusted business groups',
+          style: theme.textTheme.titleSmall?.copyWith(fontSize: 15),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Fast role entry, no landing-page scan.',
+          style: theme.textTheme.bodySmall,
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            Chip(label: Text(statsLine)),
+            const Chip(label: Text('No scroll')),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _RolePanel extends StatelessWidget {
+  const _RolePanel({
+    required this.firebaseStatus,
+    required this.sessionRole,
+    required this.snapshot,
+  });
+
+  final FirebaseBootstrapResult firebaseStatus;
+  final AppRole? sessionRole;
+  final AppWorkspaceSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFF),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFFE4E8F7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Choose your role',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Open the role surface you need right now.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: 338,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: AppRole.values
+                      .map(
+                        (role) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _RoleCard(
                             role: role,
                             firebaseStatus: firebaseStatus,
-                            sessionRole: session?.role,
+                            sessionRole: sessionRole,
                             statsLine: switch (role) {
                               AppRole.owner =>
                                 '${snapshot.owner.businesses.length} businesses • ${snapshot.owner.staffMembers.length} staff accounts',
                               AppRole.staff =>
-                                '${snapshot.staff.dashboardMetrics.length} operator metrics • ${snapshot.staff.recentTransactions.length} live actions',
+                                '${snapshot.staff.dashboardMetrics.length} metrics • ${snapshot.staff.recentTransactions.length} recent actions',
                               AppRole.client =>
-                                '${snapshot.client.storeDirectory.length} stores • ${snapshot.client.walletLots.length} wallet lots',
+                                '${snapshot.client.storeDirectory.length} partners • ${snapshot.client.walletLots.length} wallet lots',
                             },
                           ),
-                        )
-                        .toList(),
-                  ),
-                  const SizedBox(height: 20),
-                  const SectionCard(
-                    title: 'Audit Snapshot',
-                    subtitle:
-                        'What the repository looked like before this foundation pass.',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _AuditLine(
-                          'Reusable',
-                          'Flutter workspace, platform folders, Git history, and Android Firebase JSON were already present.',
                         ),
-                        _AuditLine(
-                          'Missing',
-                          'Production app structure, Firebase runtime bootstrap, backend source, Firestore rules, and any domain implementation were absent.',
-                        ),
-                        _AuditLine(
-                          'Risk found',
-                          'Android app ID did not match the checked-in Firebase config, and web Firebase options were not configured for Chrome development.',
-                        ),
-                        _AuditLine(
-                          'Current stance',
-                          'Chrome work continues through preview-safe seeded data while the backend contract and UI surfaces are established.',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                      )
+                      .toList(),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -158,48 +208,66 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final actionLabel = _buildActionLabel();
+    final palette = _paletteForRole(role);
 
-    return SizedBox(
-      width: 390,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(role.label, style: theme.textTheme.headlineSmall),
-              const SizedBox(height: 8),
-              Text(
-                role.summary,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: const Color(0xFF52606D),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                statsLine,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: const Color(0xFF1B5E52),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                role.navigationLabel,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF52606D),
-                ),
-              ),
-              const SizedBox(height: 20),
-              FilledButton(
-                key: ValueKey('role-action-${role.name}'),
-                onPressed: () => _handleAction(context),
-                child: Text(actionLabel),
-              ),
-            ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE4E8F7)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: palette.background,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.center,
+            child: Icon(palette.icon, color: palette.foreground, size: 20),
           ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(role.label, style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 2),
+                Text(
+                  statsLine,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: const Color(0xFF5A65AF),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 118,
+            child: FilledButton(
+              key: ValueKey('role-action-${role.name}'),
+              onPressed: () => _handleAction(context),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 10,
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(_buildActionLabel()),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -241,61 +309,24 @@ class _RoleCard extends StatelessWidget {
   }
 }
 
-class _PillarChip extends StatelessWidget {
-  const _PillarChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _AuditLine extends StatelessWidget {
-  const _AuditLine(this.label, this.value);
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: RichText(
-        text: TextSpan(
-          style: theme.textTheme.bodyLarge,
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            TextSpan(
-              text: value,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFF52606D),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+({IconData icon, Color background, Color foreground}) _paletteForRole(
+  AppRole role,
+) {
+  return switch (role) {
+    AppRole.client => (
+      icon: Icons.person_outline_rounded,
+      background: const Color(0xFFE9EDFF),
+      foreground: const Color(0xFF5D6BFF),
+    ),
+    AppRole.owner => (
+      icon: Icons.storefront_outlined,
+      background: const Color(0xFFFFF1E2),
+      foreground: const Color(0xFFF29C38),
+    ),
+    AppRole.staff => (
+      icon: Icons.badge_outlined,
+      background: const Color(0xFFE8FBF4),
+      foreground: const Color(0xFF2CB991),
+    ),
+  };
 }

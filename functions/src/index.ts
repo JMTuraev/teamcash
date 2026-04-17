@@ -19,26 +19,28 @@ import {
 } from './core.js';
 import {
   adminAdjustCashbackFlow,
-  createBusinessFlow,
   claimGiftTransferFlow,
   claimCustomerWalletByPhoneFlow,
   contributeSharedCheckoutFlow,
   createGroupFlow,
   createGiftTransferFlow,
   createSharedCheckoutFlow,
-  createStaffAccountFlow,
-  disableStaffAccountFlow,
   finalizeSharedCheckoutFlow,
   expireWalletLotsFlow,
   issueCashbackFlow,
   redeemCashbackFlow,
   refundCashbackFlow,
-  resetStaffPasswordFlow,
   requestGroupJoinFlow,
   sweepExpiredActiveWalletLotsBatchFlow,
-  updateStaffProfileFlow,
   voteOnGroupJoinFlow,
 } from './operations.js';
+import {
+  createBusinessFlow,
+  createStaffAccountFlow,
+  disableStaffAccountFlow,
+  resetStaffPasswordFlow,
+  updateStaffProfileFlow,
+} from './operator_flows.js';
 import type {
   AdminAdjustCashbackInput,
   CreateBusinessInput,

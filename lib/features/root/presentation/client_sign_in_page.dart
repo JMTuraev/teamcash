@@ -39,67 +39,136 @@ class _ClientSignInPageState extends ConsumerState<ClientSignInPage> {
     final hasLinkedClientSession = session?.role == AppRole.client;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Client phone verification')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620),
-            child: ListView(
-              padding: const EdgeInsets.all(24),
+      body: AppBackdrop(
+        child: SafeArea(
+          child: MobileAppFrame(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SectionCard(
-                  title: 'Claim your existing cashback history',
-                  subtitle:
-                      'Staff can issue cashback before the app is installed. Once the same phone number is verified, the phone-first wallet is claimed into the client surface.',
+                TextButton.icon(
+                  onPressed: () => context.go('/'),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text('Back'),
+                ),
+                Center(
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6576FF), Color(0xFF8666FF)],
+                      ),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.link_rounded,
+                      size: 34,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Center(
+                  child: Text(
+                    'Client Wallet',
+                    style: theme.textTheme.headlineSmall,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Center(
+                  child: Text(
+                    'Claim cashback with the same number staff already used.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _AuthRoleBadge(
+                        label: 'Customer',
+                        icon: Icons.person_outline_rounded,
+                        selected: true,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _AuthRoleBadge(
+                        label: 'Owner',
+                        icon: Icons.storefront_outlined,
+                        selected: false,
+                        onTap: () => context.go('/sign-in/owner'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _AuthRoleBadge(
+                        label: 'Staff',
+                        icon: Icons.badge_outlined,
+                        selected: false,
+                        onTap: () => context.go('/sign-in/staff'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                InfoBanner(
+                  title: bootstrap.mode == FirebaseBootstrapMode.connected
+                      ? 'Phone verification is active'
+                      : 'Preview client mode',
+                  message: bootstrap.mode == FirebaseBootstrapMode.connected
+                      ? 'Verify the same number and TeamCash will attach the older phone-first wallet to this app session.'
+                      : bootstrap.message,
+                  color: bootstrap.mode == FirebaseBootstrapMode.connected
+                      ? const Color(0xFFE8FBF4)
+                      : const Color(0xFFFFF3DF),
+                  icon: bootstrap.mode == FirebaseBootstrapMode.connected
+                      ? Icons.verified_user_outlined
+                      : Icons.visibility_outlined,
+                ),
+                if (authState.statusMessage != null) ...[
+                  const SizedBox(height: 10),
+                  InfoBanner(
+                    title: 'Phone claim status',
+                    message: authState.statusMessage!,
+                    color: authState.lastErrorCode == null
+                        ? const Color(0xFFEFF2FF)
+                        : const Color(0xFFFFF3DF),
+                    icon: authState.lastErrorCode == null
+                        ? Icons.sms_outlined
+                        : Icons.warning_amber_rounded,
+                  ),
+                ],
+                const SizedBox(height: 14),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      InfoBanner(
-                        title: bootstrap.mode == FirebaseBootstrapMode.connected
-                            ? 'Firebase runtime connected'
-                            : 'Preview runtime active',
-                        message: bootstrap.message,
-                        color: bootstrap.mode == FirebaseBootstrapMode.connected
-                            ? const Color(0xFFE7F5EF)
-                            : const Color(0xFFFFF2D8),
-                      ),
-                      const SizedBox(height: 16),
-                      if (authState.statusMessage != null) ...[
-                        InfoBanner(
-                          title: 'Phone claim status',
-                          message: authState.statusMessage!,
-                          color: authState.lastErrorCode == null
-                              ? const Color(0xFFEFF4FF)
-                              : const Color(0xFFFFF2D8),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      if (authState.recoveryHint != null) ...[
-                        InfoBanner(
-                          title: 'Recovery hint',
-                          message: authState.recoveryHint!,
-                          color: const Color(0xFFFFF2D8),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
                       if (hasLinkedClientSession) ...[
                         InfoBanner(
                           title: 'Client wallet linked',
                           message:
                               'Verified phone ${session?.phoneNumber ?? ''} is already attached to customer wallet ${session?.customerId ?? ''}.',
-                          color: const Color(0xFFE7F5EF),
+                          color: const Color(0xFFE8FBF4),
+                          icon: Icons.account_balance_wallet_outlined,
                         ),
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
+                        const Spacer(),
+                        FilledButton(
                           onPressed: () => context.go('/client'),
-                          icon: const Icon(
-                            Icons.account_balance_wallet_outlined,
-                          ),
-                          label: const Text('Open client wallet'),
+                          child: const Text('Open Client Wallet'),
                         ),
                       ] else if (bootstrap.mode ==
                           FirebaseBootstrapMode.preview) ...[
-                        FilledButton.icon(
+                        CompactStatTile(
+                          label: 'Mode',
+                          value: 'Preview wallet',
+                          tint: const Color(0xFF6474FF),
+                          icon: Icons.visibility_outlined,
+                        ),
+                        const Spacer(),
+                        FilledButton(
                           onPressed: () async {
                             await ref
                                 .read(appSessionControllerProvider.notifier)
@@ -107,144 +176,144 @@ class _ClientSignInPageState extends ConsumerState<ClientSignInPage> {
                             if (!context.mounted) return;
                             context.go('/client');
                           },
-                          icon: const Icon(Icons.visibility_outlined),
-                          label: const Text('Open preview wallet'),
+                          child: const Text('Open Preview Wallet'),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'UX fix: long preview explanation was replaced by a direct path into the wallet.',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ] else if (authState.hasVerifiedPhoneUser) ...[
+                        InfoBanner(
+                          title: 'Verified phone detected',
+                          message:
+                              'Phone ${authState.verifiedPhoneNumber!} is signed in. Finish the claim to attach the older wallet history.',
+                          color: const Color(0xFFE8FBF4),
+                          icon: Icons.phone_android_rounded,
+                        ),
+                        if (authState.recoveryHint != null) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            authState.recoveryHint!,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                        const Spacer(),
+                        FilledButton(
+                          onPressed: authState.isSubmitting
+                              ? null
+                              : _claimExistingWallet,
+                          child: authState.isSubmitting
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Claim Wallet History'),
+                        ),
+                        const SizedBox(height: 10),
+                        OutlinedButton(
+                          onPressed: authState.isSubmitting
+                              ? null
+                              : _useAnotherNumber,
+                          child: const Text('Use Another Number'),
                         ),
                       ] else ...[
-                        if (authState.hasVerifiedPhoneUser) ...[
-                          InfoBanner(
-                            title: 'Verified phone detected',
-                            message:
-                                'Phone ${authState.verifiedPhoneNumber!} is signed in. Finish the claim step to attach existing shadow-wallet history.',
-                            color: const Color(0xFFE7F5EF),
+                        TextField(
+                          key: const ValueKey('client-auth-phone-input'),
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            labelText: 'Phone number',
+                            hintText: '+998901234567',
                           ),
-                          const SizedBox(height: 16),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: [
-                              FilledButton.icon(
-                                onPressed: authState.isSubmitting
-                                    ? null
-                                    : _claimExistingWallet,
-                                icon: authState.isSubmitting
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.verified_user_outlined),
-                                label: const Text('Claim wallet history'),
-                              ),
-                              OutlinedButton(
-                                onPressed: authState.isSubmitting
-                                    ? null
-                                    : _useAnotherNumber,
-                                child: const Text('Use another number'),
-                              ),
-                            ],
-                          ),
-                        ] else ...[
+                        ),
+                        if (authState.isAwaitingCode) ...[
+                          const SizedBox(height: 12),
                           TextField(
-                            key: const ValueKey('client-auth-phone-input'),
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            decoration: const InputDecoration(
-                              labelText: 'Phone number',
-                              hintText: '+998901234567',
+                            key: const ValueKey('client-auth-code-input'),
+                            controller: _codeController,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(6),
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            decoration: InputDecoration(
+                              labelText: 'SMS code',
+                              hintText: '123456',
+                              helperText:
+                                  '${authState.normalizedPhone ?? 'your number'} • attempt ${authState.attemptCount}',
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          FilledButton.icon(
+                        ],
+                        const SizedBox(height: 10),
+                        Text(
+                          authState.isAwaitingCode
+                              ? 'Second step appears only after the code is sent, reducing initial input load on mobile.'
+                              : 'UX fix: first screen asks only for the phone number, so the client is not overloaded.',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        const Spacer(),
+                        if (!authState.isAwaitingCode)
+                          FilledButton(
                             key: const ValueKey('client-auth-send-code'),
-                            onPressed: authState.isSubmitting
-                                ? null
-                                : _sendCode,
-                            icon: authState.isSubmitting
+                            onPressed: authState.isSubmitting ? null : _sendCode,
+                            child: authState.isSubmitting
                                 ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
+                                    width: 22,
+                                    height: 22,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
+                                      color: Colors.white,
                                     ),
                                   )
-                                : const Icon(Icons.sms_outlined),
-                            label: const Text('Send SMS code'),
+                                : const Text('Send SMS Code'),
+                          )
+                        else ...[
+                          FilledButton(
+                            key: const ValueKey('client-auth-verify-code'),
+                            onPressed: authState.isSubmitting
+                                ? null
+                                : _verifyCode,
+                            child: authState.isSubmitting
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Verify and Claim Wallet'),
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Use the same phone number that staff used when issuing cashback before you installed the app.',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: const Color(0xFF52606D),
-                            ),
-                          ),
-                          if (authState.isAwaitingCode) ...[
-                            const SizedBox(height: 20),
-                            TextField(
-                              key: const ValueKey('client-auth-code-input'),
-                              controller: _codeController,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                LengthLimitingTextInputFormatter(6),
-                                FilteringTextInputFormatter.digitsOnly,
-                              ],
-                              decoration: InputDecoration(
-                                labelText: 'SMS code',
-                                hintText: '123456',
-                                helperText:
-                                    'Sent to ${authState.normalizedPhone ?? 'your verified number'} • attempt ${authState.attemptCount}',
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Wrap(
-                              spacing: 10,
-                              runSpacing: 10,
-                              children: [
-                                FilledButton.icon(
-                                  key: const ValueKey(
-                                    'client-auth-verify-code',
-                                  ),
-                                  onPressed: authState.isSubmitting
-                                      ? null
-                                      : _verifyCode,
-                                  icon: authState.isSubmitting
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Icon(Icons.verified_outlined),
-                                  label: const Text('Verify and claim wallet'),
-                                ),
-                                OutlinedButton(
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
                                   key: const ValueKey(
                                     'client-auth-change-number',
                                   ),
                                   onPressed: authState.isSubmitting
                                       ? null
                                       : _useAnotherNumber,
-                                  child: const Text('Change number'),
+                                  child: const Text('Change Number'),
                                 ),
-                                _ResendCodeButton(
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _ResendCodeButton(
                                   codeSentAt: authState.codeSentAt,
                                   attemptCount: authState.attemptCount,
                                   isSubmitting: authState.isSubmitting,
                                   onResend: _resendCode,
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Chrome/web remains the active verification target for now. Mobile-native SMS polish will layer onto the same phone-first claim flow later.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: const Color(0xFF6B7280),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ],
                       ],
                     ],
@@ -322,6 +391,62 @@ class _ClientSignInPageState extends ConsumerState<ClientSignInPage> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+class _AuthRoleBadge extends StatelessWidget {
+  const _AuthRoleBadge({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? const Color(0xFFEAF0FF) : const Color(0xFFF7F8FD),
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: selected
+                  ? const Color(0xFF6374FF)
+                  : const Color(0xFFE4E8F7),
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: selected
+                    ? const Color(0xFF6374FF)
+                    : const Color(0xFF8C94B6),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected
+                      ? const Color(0xFF4250A8)
+                      : const Color(0xFF8C94B6),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

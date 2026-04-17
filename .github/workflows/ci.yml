@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'codex/**'
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            functions/package-lock.json
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Install Functions dependencies
+        run: npm ci --prefix functions
+
+      - name: Flutter analyze
+        run: flutter analyze
+
+      - name: Flutter tests
+        run: flutter test
+
+      - name: Build Functions
+        run: npm run build --prefix functions
+
+      - name: Emulator backend tests
+        run: npx firebase-tools emulators:exec --project demo-teamcash --only auth,firestore,functions,storage "npm --prefix functions test"

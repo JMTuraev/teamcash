@@ -143,26 +143,6 @@ void main() {
       find.byKey(const ValueKey('client-store-silk-road-cafe')),
       findsOneWidget,
     );
-    expect(
-      find.byKey(const ValueKey('client-store-products-silk-road-cafe')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('client-store-services-silk-road-cafe')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('client-store-media-silk-road-cafe')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(
-        const ValueKey(
-          'client-store-media-item-silk-road-cafe-silk-road-cover',
-        ),
-      ),
-      findsOneWidget,
-    );
     await tester.tap(find.text('Profile').last);
     await tester.pumpAndSettle();
     expect(
@@ -183,12 +163,33 @@ void main() {
     );
     await tester.tap(find.text('Stores').last);
     await tester.pumpAndSettle();
-    await tester.tap(
+    final detailOpener = tester.widget<GestureDetector>(
       find.byKey(const ValueKey('client-store-open-details-silk-road-cafe')),
     );
+    detailOpener.onTap?.call();
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('client-store-detail-sheet-silk-road-cafe')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('client-store-detail-products-silk-road-cafe')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('client-store-detail-services-silk-road-cafe')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('client-store-media-silk-road-cafe-detail')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        const ValueKey(
+          'client-store-media-item-silk-road-cafe-detail-silk-road-cover',
+        ),
+      ),
       findsOneWidget,
     );
   });

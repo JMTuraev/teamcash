@@ -29,14 +29,16 @@ class CustomerIdentityQrCard extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 420;
           final useColumn = constraints.maxWidth < 520;
+          final qrSize = isCompact ? 118.0 : 220.0;
           final qrBox = Container(
-            width: 220,
-            height: 220,
-            padding: const EdgeInsets.all(14),
+            width: qrSize,
+            height: qrSize,
+            padding: EdgeInsets.all(isCompact ? 10 : 14),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(isCompact ? 18 : 24),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x14000000),
@@ -62,10 +64,10 @@ class CustomerIdentityQrCard extends StatelessWidget {
                       token.isPreview ? 'Preview QR' : 'Live customer QR',
                     ),
                   ),
-                  Chip(label: Text(token.phoneE164)),
+                  if (!isCompact) Chip(label: Text(token.phoneE164)),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: isCompact ? 10 : 12),
               Text(
                 'Quick identification',
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -74,23 +76,28 @@ class CustomerIdentityQrCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Staff can scan this in the mobile app later. While Chrome is the active dev target, the same payload can be copied and pasted into Staff > Scan.',
+                isCompact
+                    ? 'Cashier can scan this code or paste the payload during browser testing.'
+                    : 'Staff can scan this in the mobile app later. While Chrome is the active dev target, the same payload can be copied and pasted into Staff > Scan.',
+                maxLines: isCompact ? 2 : null,
+                overflow: isCompact ? TextOverflow.ellipsis : TextOverflow.visible,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: const Color(0xFF52606D),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: isCompact ? 10 : 12),
               _IdentityDetailLine(label: 'Customer', value: token.displayName),
               _IdentityDetailLine(label: 'Wallet ID', value: token.customerId),
-              _IdentityDetailLine(
-                label: 'Generated',
-                value: formatDateTime(token.generatedAt.toLocal()),
-              ),
-              const SizedBox(height: 12),
+              if (!isCompact)
+                _IdentityDetailLine(
+                  label: 'Generated',
+                  value: formatDateTime(token.generatedAt.toLocal()),
+                ),
+              SizedBox(height: isCompact ? 10 : 12),
               Container(
                 key: const ValueKey('client-identity-qr-payload'),
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(isCompact ? 10 : 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -98,28 +105,38 @@ class CustomerIdentityQrCard extends StatelessWidget {
                 ),
                 child: Text(
                   token.compactPayload,
+                  maxLines: isCompact ? 1 : null,
+                  overflow: isCompact ? TextOverflow.ellipsis : TextOverflow.visible,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontFamily: 'monospace',
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  FilledButton.icon(
-                    key: const ValueKey('client-identity-copy-payload'),
-                    onPressed: onCopyPayload,
-                    icon: const Icon(Icons.copy_all_outlined),
-                    label: const Text('Copy QR payload'),
-                  ),
-                  Chip(
-                    avatar: const Icon(Icons.phone_android_outlined, size: 18),
-                    label: Text('Chrome fallback uses ${token.phoneE164}'),
-                  ),
-                ],
-              ),
+              SizedBox(height: isCompact ? 10 : 12),
+              if (isCompact)
+                FilledButton.tonalIcon(
+                  key: const ValueKey('client-identity-copy-payload'),
+                  onPressed: onCopyPayload,
+                  icon: const Icon(Icons.copy_all_outlined),
+                  label: const Text('Copy payload'),
+                )
+              else
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    FilledButton.icon(
+                      key: const ValueKey('client-identity-copy-payload'),
+                      onPressed: onCopyPayload,
+                      icon: const Icon(Icons.copy_all_outlined),
+                      label: const Text('Copy QR payload'),
+                    ),
+                    Chip(
+                      avatar: const Icon(Icons.phone_android_outlined, size: 18),
+                      label: Text('Chrome fallback uses ${token.phoneE164}'),
+                    ),
+                  ],
+                ),
             ],
           );
 

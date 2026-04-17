@@ -22,6 +22,7 @@ class _OperatorSignInPageState extends ConsumerState<OperatorSignInPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _submitting = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -33,100 +34,181 @@ class _OperatorSignInPageState extends ConsumerState<OperatorSignInPage> {
   @override
   Widget build(BuildContext context) {
     final bootstrap = ref.watch(firebaseStatusProvider);
+    final palette = _rolePalette(widget.role);
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.role.label} access')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                SectionCard(
-                  title: '${widget.role.label} sign in',
-                  subtitle:
-                      'Owner and staff use username/password login backed by Firebase Auth alias emails.',
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        InfoBanner(
-                          title:
-                              bootstrap.mode == FirebaseBootstrapMode.connected
-                              ? 'Firebase runtime connected'
-                              : 'Preview runtime active',
-                          message: bootstrap.message,
-                          color:
-                              bootstrap.mode == FirebaseBootstrapMode.connected
-                              ? const Color(0xFFE7F5EF)
-                              : const Color(0xFFFFF2D8),
+      body: AppBackdrop(
+        child: SafeArea(
+          child: MobileAppFrame(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => context.go('/'),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    label: const Text('Back'),
+                  ),
+                  Center(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [palette.primary, palette.secondary],
                         ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          key: const ValueKey('operator-sign-in-username'),
-                          controller: _usernameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Username',
-                            hintText: 'nadia.silkroad',
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Username is required.';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          key: const ValueKey('operator-sign-in-password'),
-                          controller: _passwordController,
-                          decoration: const InputDecoration(
-                            labelText: 'Password',
-                          ),
-                          obscureText: true,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Password is required.';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 18),
-                        FilledButton.icon(
-                          key: const ValueKey('operator-sign-in-submit'),
-                          onPressed: _submitting ? null : _submit,
-                          icon: _submitting
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.login),
-                          label: Text(
-                            bootstrap.mode == FirebaseBootstrapMode.connected
-                                ? 'Sign in'
-                                : 'Open preview workspace',
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          bootstrap.mode == FirebaseBootstrapMode.connected
-                              ? 'Use the username created by the owner. The app maps it to a hidden Firebase-compatible alias email.'
-                              : 'Preview mode keeps product work moving on Chrome even before final web auth/runtime settings are supplied.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF52606D),
-                          ),
-                        ),
-                      ],
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        palette.icon,
+                        size: 34,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 14),
+                  Center(
+                    child: Text(
+                      widget.role == AppRole.owner
+                          ? 'Business Owner'
+                          : 'Staff Access',
+                      style: theme.textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Center(
+                    child: Text(
+                      widget.role == AppRole.owner
+                          ? 'Manage businesses and tandem rules from a compact mobile flow.'
+                          : 'Run operator actions and client lookup without a dense dashboard.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _RoleBadge(
+                          label: 'Customer',
+                          icon: Icons.person_outline_rounded,
+                          selected: false,
+                          onTap: () => context.go('/sign-in/client'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _RoleBadge(
+                          label: 'Owner',
+                          icon: Icons.storefront_outlined,
+                          selected: widget.role == AppRole.owner,
+                          onTap: widget.role == AppRole.owner
+                              ? null
+                              : () => context.go('/sign-in/owner'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _RoleBadge(
+                          label: 'Staff',
+                          icon: Icons.badge_outlined,
+                          selected: widget.role == AppRole.staff,
+                          onTap: widget.role == AppRole.staff
+                              ? null
+                              : () => context.go('/sign-in/staff'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  InfoBanner(
+                    title: bootstrap.mode == FirebaseBootstrapMode.connected
+                        ? 'Live operator sign-in'
+                        : 'Preview operator mode',
+                    message: bootstrap.mode == FirebaseBootstrapMode.connected
+                        ? 'Username/password opens the operator account created by the owner.'
+                        : bootstrap.message,
+                    color: bootstrap.mode == FirebaseBootstrapMode.connected
+                        ? const Color(0xFFE8FBF4)
+                        : const Color(0xFFFFF3DF),
+                    icon: bootstrap.mode == FirebaseBootstrapMode.connected
+                        ? Icons.lock_open_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    key: const ValueKey('operator-sign-in-username'),
+                    controller: _usernameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Username',
+                      hintText: 'nadia.silkroad',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Username is required.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: const ValueKey('operator-sign-in-password'),
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                      ),
+                    ),
+                    obscureText: _obscurePassword,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Password is required.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    key: const ValueKey('operator-sign-in-submit'),
+                    onPressed: _submitting ? null : _submit,
+                    child: _submitting
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            bootstrap.mode == FirebaseBootstrapMode.connected
+                                ? 'Log In to ${widget.role.label}'
+                                : 'Open ${widget.role.label} Preview',
+                          ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    bootstrap.mode == FirebaseBootstrapMode.connected
+                        ? 'Critical UX change: the screen now surfaces only the required fields first, so the operator reaches the workspace faster on mobile.'
+                        : 'Critical UX change: preview messaging stays visible, but longer explanation was removed so the primary action remains above the fold.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -171,4 +253,80 @@ class _OperatorSignInPageState extends ConsumerState<OperatorSignInPage> {
       }
     }
   }
+}
+
+class _RoleBadge extends StatelessWidget {
+  const _RoleBadge({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? const Color(0xFFEAF0FF) : const Color(0xFFF7F8FD),
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: selected
+                  ? const Color(0xFF6374FF)
+                  : const Color(0xFFE4E8F7),
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: selected
+                    ? const Color(0xFF6374FF)
+                    : const Color(0xFF8C94B6),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected
+                      ? const Color(0xFF4250A8)
+                      : const Color(0xFF8C94B6),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+({Color primary, Color secondary, IconData icon}) _rolePalette(AppRole role) {
+  return switch (role) {
+    AppRole.owner => (
+      primary: const Color(0xFF6F74FF),
+      secondary: const Color(0xFF8E5EFF),
+      icon: Icons.storefront_outlined,
+    ),
+    AppRole.staff => (
+      primary: const Color(0xFF5F7CFF),
+      secondary: const Color(0xFF3EC9C5),
+      icon: Icons.badge_outlined,
+    ),
+    AppRole.client => (
+      primary: const Color(0xFF6F74FF),
+      secondary: const Color(0xFF8E5EFF),
+      icon: Icons.person_outline_rounded,
+    ),
+  };
 }
