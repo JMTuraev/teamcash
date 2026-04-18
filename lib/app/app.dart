@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_form_field/phone_form_field.dart';
 
 import 'package:teamcash/app/bootstrap/firebase_bootstrap.dart';
 import 'package:teamcash/app/router/app_router.dart';
@@ -60,9 +62,20 @@ class TeamCashApp extends StatelessWidget {
           final router = ref.watch(appRouterProvider);
 
           return MaterialApp.router(
-            title: 'TeamCash',
+            title: 'Together',
             debugShowCheckedModeBanner: false,
             theme: buildTeamCashTheme(),
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              ...PhoneFieldLocalization.delegates,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('uz'),
+              Locale('ru'),
+            ],
             routerConfig: router,
           );
         },

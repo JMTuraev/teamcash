@@ -35,7 +35,9 @@ enum _StaffAccountAction { edit, resetPassword, disable }
 enum _AdjustmentDirection { credit, debit }
 
 class OwnerShell extends ConsumerStatefulWidget {
-  const OwnerShell({super.key});
+  const OwnerShell({super.key, this.initialTabIndex});
+
+  final int? initialTabIndex;
 
   @override
   ConsumerState<OwnerShell> createState() => _OwnerShellState();
@@ -51,6 +53,7 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
     super.initState();
     final businesses = ref.read(appSnapshotProvider).owner.businesses;
     _activeBusinessId = businesses.first.id;
+    _selectedIndex = _normalizeTabIndex(widget.initialTabIndex, fallback: 1);
   }
 
   @override
@@ -1875,4 +1878,17 @@ class _OwnerShellState extends ConsumerState<OwnerShell> {
         return 'service';
     }
   }
+}
+
+int _normalizeTabIndex(int? value, {required int fallback}) {
+  if (value == null) {
+    return fallback;
+  }
+  if (value < 0) {
+    return 0;
+  }
+  if (value > 2) {
+    return 2;
+  }
+  return value;
 }

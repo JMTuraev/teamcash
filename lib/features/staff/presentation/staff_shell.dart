@@ -26,7 +26,9 @@ part 'staff_shell_scan.dart';
 part 'staff_shell_profile.dart';
 
 class StaffShell extends ConsumerStatefulWidget {
-  const StaffShell({super.key});
+  const StaffShell({super.key, this.initialTabIndex});
+
+  final int? initialTabIndex;
 
   @override
   ConsumerState<StaffShell> createState() => _StaffShellState();
@@ -47,6 +49,13 @@ class _StaffShellState extends ConsumerState<StaffShell> {
   );
   bool _submittingAction = false;
   ResolvedCustomerIdentifier? _resolvedCustomerIdentifier;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = _normalizeStaffTabIndex(widget.initialTabIndex, 1);
+    _hasAppliedPreferredTab = widget.initialTabIndex != null;
+  }
 
   @override
   void dispose() {
@@ -711,4 +720,17 @@ class _StaffShellState extends ConsumerState<StaffShell> {
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
+}
+
+int _normalizeStaffTabIndex(int? value, int fallback) {
+  if (value == null) {
+    return fallback;
+  }
+  if (value < 0) {
+    return 0;
+  }
+  if (value > 2) {
+    return 2;
+  }
+  return value;
 }

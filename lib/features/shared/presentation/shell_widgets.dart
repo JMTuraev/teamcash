@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:teamcash/app/theme/teamcash_icons.dart';
 import 'package:teamcash/core/models/dashboard_models.dart';
 
 class AppBackdrop extends StatelessWidget {
@@ -12,7 +13,7 @@ class AppBackdrop extends StatelessWidget {
     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFF8F9FF), Color(0xFFF4F6FF), Color(0xFFF6FCFB)],
+          colors: [Color(0xFFF3F5EF), Color(0xFFEAF1EA), Color(0xFFF7F3EC)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -21,29 +22,51 @@ class AppBackdrop extends StatelessWidget {
         children: [
           Positioned(
             top: -120,
-            right: -60,
+            right: -10,
             child: _BackdropOrb(
-              size: 280,
-              color: const Color(0xFF6678FF),
-              opacity: 0.14,
+              size: 320,
+              color: const Color(0xFF1F5EFF),
+              opacity: 0.12,
             ),
           ),
           Positioned(
-            top: 180,
-            left: -90,
+            top: 150,
+            left: -70,
             child: _BackdropOrb(
-              size: 220,
-              color: const Color(0xFF76DCCA),
+              size: 250,
+              color: const Color(0xFF26B68A),
+              opacity: 0.12,
+            ),
+          ),
+          Positioned(
+            bottom: -120,
+            right: 12,
+            child: _BackdropOrb(
+              size: 280,
+              color: const Color(0xFFFF9E69),
               opacity: 0.10,
             ),
           ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(painter: _BackdropGridPainter()),
+            ),
+          ),
           Positioned(
-            bottom: -100,
-            right: 20,
-            child: _BackdropOrb(
-              size: 240,
-              color: const Color(0xFFE8A9C0),
-              opacity: 0.08,
+            top: 84,
+            right: -30,
+            child: Transform.rotate(
+              angle: -0.22,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(48),
+                  border: Border.all(
+                    color: Color(0xFFFFFFFF).withValues(alpha: 0.42),
+                  ),
+                ),
+              ),
             ),
           ),
           child,
@@ -80,48 +103,103 @@ class MobileAppFrame extends StatelessWidget {
         return Center(
           child: Padding(
             padding: padding,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(34),
-              child: Container(
-                width: width,
-                height: height,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  borderRadius: BorderRadius.circular(34),
-                  border: Border.all(color: const Color(0xFFE3E7F6)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x22424EA5),
-                      blurRadius: 44,
-                      offset: Offset(0, 24),
-                    ),
-                  ],
+            child: Container(
+              width: width,
+              height: height,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFDFCF8), Color(0xFFF0F5EC)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top: 10,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Container(
-                          width: 110,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF111426),
-                            borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(38),
+                border: Border.all(
+                  color: const Color(0xFFFFFFFF).withValues(alpha: 0.8),
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x2A16345A),
+                    blurRadius: 54,
+                    offset: Offset(0, 28),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(34),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(34),
+                    border: Border.all(color: const Color(0xFFE1E7D9)),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        top: -120,
+                        left: -80,
+                        child: _BackdropOrb(
+                          size: 220,
+                          color: const Color(0xFF1F5EFF),
+                          opacity: 0.08,
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          child: Row(
+                            children: [
+                              Text(
+                                '9:41',
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(
+                                      fontSize: 12,
+                                      color: const Color(0xFF4E5B69),
+                                    ),
+                              ),
+                              const Spacer(),
+                              Container(
+                                width: 74,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF142033),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                              ),
+                              const Spacer(),
+                              const Icon(
+                                TeamCashIcons.signal,
+                                size: 14,
+                                color: Color(0xFF4E5B69),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(
+                                TeamCashIcons.wifi,
+                                size: 14,
+                                color: Color(0xFF4E5B69),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(
+                                TeamCashIcons.battery,
+                                size: 16,
+                                color: Color(0xFF4E5B69),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                    Positioned.fill(
-                      top: 20,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
-                        child: child,
+                      Positioned.fill(
+                        top: 34,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+                          child: child,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -213,15 +291,15 @@ class HeroSummaryCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF6678FF), Color(0xFF725CFF)],
+          colors: [Color(0xFF163E9E), Color(0xFF1F5EFF), Color(0xFF26B68A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(32),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x336678FF),
-            blurRadius: 32,
+            color: Color(0x33163E9E),
+            blurRadius: 36,
             offset: Offset(0, 18),
           ),
         ],
@@ -247,9 +325,18 @@ class HeroSummaryCard extends StatelessWidget {
               width: 112,
               height: 112,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
+                color: Colors.white.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
+            ),
+          ),
+          Positioned(
+            left: 22,
+            right: 22,
+            top: 18,
+            child: Container(
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.14),
             ),
           ),
           Padding(
@@ -283,7 +370,7 @@ class HeroSummaryCard extends StatelessWidget {
                     if (badge != null)
                       _HeroBadge(
                         label: badge!,
-                        icon: icon ?? Icons.workspace_premium_outlined,
+                        icon: icon ?? TeamCashIcons.premium,
                       ),
                   ],
                 ),
@@ -328,7 +415,7 @@ class InfoBanner extends StatelessWidget {
     required this.title,
     required this.message,
     this.color = const Color(0xFFEEF2FF),
-    this.icon = Icons.info_outline,
+    this.icon = TeamCashIcons.info,
   });
 
   final String title;
@@ -344,9 +431,23 @@ class InfoBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.94),
+            Colors.white.withValues(alpha: 0.86),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x141C3458),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,7 +460,7 @@ class InfoBanner extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: 20, color: const Color(0xFF4956B8)),
+            child: Icon(icon, size: 20, color: const Color(0xFF1F5EFF)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -433,13 +534,14 @@ class SurfaceIconButton extends StatelessWidget {
           Material(
             color: Colors.white.withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(18),
+            shadowColor: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(18),
               onTap: onPressed,
               child: SizedBox(
                 width: 48,
                 height: 48,
-                child: Icon(icon, color: const Color(0xFF414C8F)),
+                child: Icon(icon, color: const Color(0xFF243B63)),
               ),
             ),
           ),
@@ -527,7 +629,7 @@ class SegmentedChoice<T> extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F5FF),
+        color: const Color(0xFFF0F4EC),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
@@ -544,12 +646,14 @@ class SegmentedChoice<T> extends StatelessWidget {
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: item.value == value ? Colors.white : Colors.transparent,
+                    color: item.value == value
+                        ? Colors.white
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: item.value == value
                         ? const [
                             BoxShadow(
-                              color: Color(0x12414B98),
+                              color: Color(0x141A365C),
                               blurRadius: 18,
                               offset: Offset(0, 6),
                             ),
@@ -561,8 +665,8 @@ class SegmentedChoice<T> extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: item.value == value
-                          ? const Color(0xFF4A57A9)
-                          : const Color(0xFF8A92B3),
+                          ? const Color(0xFF1F5EFF)
+                          : const Color(0xFF7C8792),
                     ),
                   ),
                 ),
@@ -599,9 +703,7 @@ class PagerDots extends StatelessWidget {
           width: selected ? 20 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: selected
-                ? const Color(0xFF6474FF)
-                : const Color(0xFFD7DCF4),
+            color: selected ? const Color(0xFF6474FF) : const Color(0xFFD7DCF4),
             borderRadius: BorderRadius.circular(999),
           ),
         );
@@ -668,13 +770,13 @@ class CompactStatTile extends StatelessWidget {
 
 BoxDecoration _panelDecoration() {
   return BoxDecoration(
-    color: Colors.white.withValues(alpha: 0.94),
+    color: Colors.white.withValues(alpha: 0.90),
     borderRadius: BorderRadius.circular(28),
-    border: Border.all(color: const Color(0xFFE4E8F7)),
+    border: Border.all(color: const Color(0xFFE1E7D9)),
     boxShadow: const [
       BoxShadow(
-        color: Color(0x15444EA4),
-        blurRadius: 28,
+        color: Color(0x14193256),
+        blurRadius: 30,
         offset: Offset(0, 16),
       ),
     ],
@@ -692,15 +794,15 @@ class _MetricTile extends StatelessWidget {
     final trend = switch (metric.trendDirection) {
       MetricTrendDirection.up => (
         color: const Color(0xFF1EAF88),
-        icon: Icons.trending_up_rounded,
+        icon: TeamCashIcons.trendUp,
       ),
       MetricTrendDirection.down => (
         color: const Color(0xFFE56874),
-        icon: Icons.trending_down_rounded,
+        icon: TeamCashIcons.trendDown,
       ),
       MetricTrendDirection.neutral => (
         color: const Color(0xFF8189AB),
-        icon: Icons.trending_flat_rounded,
+        icon: TeamCashIcons.trendFlat,
       ),
     };
 
@@ -800,4 +902,29 @@ class _HeroBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+class _BackdropGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final majorPaint = Paint()
+      ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.11)
+      ..strokeWidth = 1;
+    final minorPaint = Paint()
+      ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.05)
+      ..strokeWidth = 1;
+
+    for (double x = 0; x < size.width; x += 84) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), majorPaint);
+    }
+    for (double y = 20; y < size.height; y += 84) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), majorPaint);
+    }
+    for (double x = 42; x < size.width; x += 84) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), minorPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

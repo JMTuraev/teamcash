@@ -13,7 +13,8 @@ final appRouterProvider = Provider<GoRouter>(
   (ref) => GoRouter(
     initialLocation: '/',
     routes: [
-      GoRoute(path: '/', builder: (context, state) => const RoleHubPage()),
+      GoRoute(path: '/', builder: (context, state) => const ClientSignInPage()),
+      GoRoute(path: '/hub', builder: (context, state) => const RoleHubPage()),
       GoRoute(
         path: '/sign-in/:role',
         builder: (context, state) {
@@ -29,12 +30,58 @@ final appRouterProvider = Provider<GoRouter>(
               : OperatorSignInPage(role: role);
         },
       ),
-      GoRoute(path: '/owner', builder: (context, state) => const OwnerShell()),
-      GoRoute(path: '/staff', builder: (context, state) => const StaffShell()),
+      GoRoute(
+        path: '/owner',
+        builder: (context, state) => OwnerShell(
+          initialTabIndex: _ownerTabIndexFor(state.uri.queryParameters['tab']),
+        ),
+      ),
+      GoRoute(
+        path: '/staff',
+        builder: (context, state) => StaffShell(
+          initialTabIndex: _staffTabIndexFor(state.uri.queryParameters['tab']),
+        ),
+      ),
       GoRoute(
         path: '/client',
-        builder: (context, state) => const ClientShell(),
+        builder: (context, state) => ClientShell(
+          initialTabIndex: _clientTabIndexFor(state.uri.queryParameters['tab']),
+        ),
+      ),
+      GoRoute(
+        path: '/client/business/:businessId',
+        builder: (context, state) => ClientBusinessPage(
+          businessId: state.pathParameters['businessId'] ?? '',
+        ),
       ),
     ],
   ),
 );
+
+int? _ownerTabIndexFor(String? tab) {
+  return switch (tab) {
+    'businesses' => 0,
+    'dashboard' => 1,
+    'staff' => 2,
+    _ => null,
+  };
+}
+
+int? _staffTabIndexFor(String? tab) {
+  return switch (tab) {
+    'dashboard' => 0,
+    'scan' => 1,
+    'profile' => 2,
+    _ => null,
+  };
+}
+
+int? _clientTabIndexFor(String? tab) {
+  return switch (tab) {
+    'stores' => 0,
+    'wallet' => 1,
+    'activity' => 2,
+    'profile' => 3,
+    _ => null,
+  };
+}

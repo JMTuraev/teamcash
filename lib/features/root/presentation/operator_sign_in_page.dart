@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:teamcash/app/app.dart';
 import 'package:teamcash/app/bootstrap/firebase_bootstrap.dart';
+import 'package:teamcash/app/theme/teamcash_icons.dart';
 import 'package:teamcash/core/models/app_role.dart';
 import 'package:teamcash/core/session/session_controller.dart';
 import 'package:teamcash/features/shared/presentation/shell_widgets.dart';
@@ -35,7 +36,6 @@ class _OperatorSignInPageState extends ConsumerState<OperatorSignInPage> {
   Widget build(BuildContext context) {
     final bootstrap = ref.watch(firebaseStatusProvider);
     final palette = _rolePalette(widget.role);
-    final theme = Theme.of(context);
 
     return Scaffold(
       body: AppBackdrop(
@@ -43,171 +43,158 @@ class _OperatorSignInPageState extends ConsumerState<OperatorSignInPage> {
           child: MobileAppFrame(
             child: Form(
               key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => context.go('/'),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    label: const Text('Back'),
-                  ),
-                  Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [palette.primary, palette.secondary],
-                        ),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        palette.icon,
-                        size: 34,
-                        color: Colors.white,
-                      ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => context.go('/'),
+                      icon: const Icon(TeamCashIcons.back),
+                      label: const Text('Back'),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  Center(
-                    child: Text(
-                      widget.role == AppRole.owner
-                          ? 'Business Owner'
-                          : 'Staff Access',
-                      style: theme.textTheme.headlineSmall,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Center(
-                    child: Text(
-                      widget.role == AppRole.owner
-                          ? 'Manage businesses and tandem rules from a compact mobile flow.'
-                          : 'Run operator actions and client lookup without a dense dashboard.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _RoleBadge(
-                          label: 'Customer',
-                          icon: Icons.person_outline_rounded,
-                          selected: false,
-                          onTap: () => context.go('/sign-in/client'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _RoleBadge(
-                          label: 'Owner',
-                          icon: Icons.storefront_outlined,
-                          selected: widget.role == AppRole.owner,
-                          onTap: widget.role == AppRole.owner
-                              ? null
-                              : () => context.go('/sign-in/owner'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _RoleBadge(
-                          label: 'Staff',
-                          icon: Icons.badge_outlined,
-                          selected: widget.role == AppRole.staff,
-                          onTap: widget.role == AppRole.staff
-                              ? null
-                              : () => context.go('/sign-in/staff'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  InfoBanner(
-                    title: bootstrap.mode == FirebaseBootstrapMode.connected
-                        ? 'Live operator sign-in'
-                        : 'Preview operator mode',
-                    message: bootstrap.mode == FirebaseBootstrapMode.connected
-                        ? 'Username/password opens the operator account created by the owner.'
-                        : bootstrap.message,
-                    color: bootstrap.mode == FirebaseBootstrapMode.connected
-                        ? const Color(0xFFE8FBF4)
-                        : const Color(0xFFFFF3DF),
-                    icon: bootstrap.mode == FirebaseBootstrapMode.connected
-                        ? Icons.lock_open_outlined
-                        : Icons.visibility_outlined,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    key: const ValueKey('operator-sign-in-username'),
-                    controller: _usernameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Username',
-                      hintText: 'nadia.silkroad',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Username is required.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    key: const ValueKey('operator-sign-in-password'),
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                      ),
-                    ),
-                    obscureText: _obscurePassword,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Password is required.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const Spacer(),
-                  FilledButton(
-                    key: const ValueKey('operator-sign-in-submit'),
-                    onPressed: _submitting ? null : _submit,
-                    child: _submitting
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            bootstrap.mode == FirebaseBootstrapMode.connected
-                                ? 'Log In to ${widget.role.label}'
-                                : 'Open ${widget.role.label} Preview',
+                    HeroSummaryCard(
+                      eyebrow: widget.role == AppRole.owner
+                          ? 'Owner access'
+                          : 'Staff access',
+                      title: widget.role == AppRole.owner
+                          ? 'Run the group from one compact control surface.'
+                          : 'Operate fast without opening a heavy dashboard.',
+                      badge: bootstrap.mode == FirebaseBootstrapMode.connected
+                          ? 'Live'
+                          : 'Preview',
+                      icon: palette.icon,
+                      supporting: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _AuthMetricPill(
+                            label: 'Role',
+                            value: widget.role.label,
                           ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    bootstrap.mode == FirebaseBootstrapMode.connected
-                        ? 'Critical UX change: the screen now surfaces only the required fields first, so the operator reaches the workspace faster on mobile.'
-                        : 'Critical UX change: preview messaging stays visible, but longer explanation was removed so the primary action remains above the fold.',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
+                          _AuthMetricPill(
+                            label: 'Mode',
+                            value:
+                                bootstrap.mode ==
+                                    FirebaseBootstrapMode.connected
+                                ? 'Connected'
+                                : 'Preview',
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _RoleBadge(
+                            label: 'Customer',
+                            icon: TeamCashIcons.person,
+                            selected: false,
+                            onTap: () => context.go('/sign-in/client'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _RoleBadge(
+                            label: 'Owner',
+                            icon: TeamCashIcons.storefront,
+                            selected: widget.role == AppRole.owner,
+                            onTap: widget.role == AppRole.owner
+                                ? null
+                                : () => context.go('/sign-in/owner'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _RoleBadge(
+                            label: 'Staff',
+                            icon: TeamCashIcons.badge,
+                            selected: widget.role == AppRole.staff,
+                            onTap: widget.role == AppRole.staff
+                                ? null
+                                : () => context.go('/sign-in/staff'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    InfoBanner(
+                      title: bootstrap.mode == FirebaseBootstrapMode.connected
+                          ? 'Credentials ready'
+                          : 'Preview access',
+                      message: bootstrap.mode == FirebaseBootstrapMode.connected
+                          ? 'Use the operator credentials created for this role.'
+                          : bootstrap.message,
+                      color: bootstrap.mode == FirebaseBootstrapMode.connected
+                          ? const Color(0xFFE8FBF4)
+                          : const Color(0xFFFFF3DF),
+                      icon: bootstrap.mode == FirebaseBootstrapMode.connected
+                          ? TeamCashIcons.unlock
+                          : TeamCashIcons.preview,
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      key: const ValueKey('operator-sign-in-username'),
+                      controller: _usernameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
+                        hintText: 'nadia.silkroad',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Username is required.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      key: const ValueKey('operator-sign-in-password'),
+                      controller: _passwordController,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                          icon: Icon(
+                            _obscurePassword
+                                ? TeamCashIcons.show
+                                : TeamCashIcons.hide,
+                          ),
+                        ),
+                      ),
+                      obscureText: _obscurePassword,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Password is required.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      key: const ValueKey('operator-sign-in-submit'),
+                      onPressed: _submitting ? null : _submit,
+                      child: _submitting
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              bootstrap.mode == FirebaseBootstrapMode.connected
+                                  ? 'Continue to ${widget.role.label}'
+                                  : 'Open ${widget.role.label} Preview',
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -316,17 +303,53 @@ class _RoleBadge extends StatelessWidget {
     AppRole.owner => (
       primary: const Color(0xFF6F74FF),
       secondary: const Color(0xFF8E5EFF),
-      icon: Icons.storefront_outlined,
+      icon: TeamCashIcons.storefront,
     ),
     AppRole.staff => (
       primary: const Color(0xFF5F7CFF),
       secondary: const Color(0xFF3EC9C5),
-      icon: Icons.badge_outlined,
+      icon: TeamCashIcons.badge,
     ),
     AppRole.client => (
       primary: const Color(0xFF6F74FF),
       secondary: const Color(0xFF8E5EFF),
-      icon: Icons.person_outline_rounded,
+      icon: TeamCashIcons.person,
     ),
   };
+}
+
+class _AuthMetricPill extends StatelessWidget {
+  const _AuthMetricPill({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.72),
+            ),
+          ),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
 }
